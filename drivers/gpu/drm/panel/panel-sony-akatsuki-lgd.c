@@ -359,7 +359,7 @@ static void sony_akatsuki_lgd_remove(struct mipi_dsi_device *dsi)
 }
 
 static const struct of_device_id sony_akatsuki_lgd_of_match[] = {
-	{ .compatible = "sony,akatsuki-lgd" },
+	{ .compatible = "lgphilips,akatsuki" },
 	{ /* sentinel */ }
 };
 MODULE_DEVICE_TABLE(of, sony_akatsuki_lgd_of_match);
