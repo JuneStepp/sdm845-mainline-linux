@@ -67,6 +67,24 @@
 		};
 	};
 
+	// bu520x1nvx lid sensor
+	gpio-hall-sensor {
+		compatible = "gpio-keys";
+		label = "Hall effect sensor";
+
+		pinctrl-0 = <&hall_sensor_default>;
+		pinctrl-names = "default";
+
+		event-hall-sensor {
+			gpios = <&tlmm 124 GPIO_ACTIVE_LOW>;
+			label = "Hall Effect Sensor";
+			linux,input-type = <EV_SW>;
+			linux,code = <SW_LID>;
+			linux,can-disable;
+			wakeup-source;
+		};
+	};
+
 	cam_vana_front_vreg: cam-vana-front-regulator {
 		compatible = "regulator-fixed";
 		regulator-name = "cam_vana_front_vreg";
@@ -128,10 +146,15 @@
 		/* SONY was cool and didn't diverge from MTP this time, yay! */
 		cont_splash_mem: memory@9d400000 {
 			reg = <0x0 0x9d400000 0x0 0x2400000>;
+		};
+
+		debug_mem: memory@ffb00000{
+			compatible = "qcom,debug_memory";
+			reg = <0x0 0xffb00000 0x0 0x100000>;
 			no-map;
 		};
 
-		ramoops@ffc00000 {
+		ramoops: memory@ffc00000 {
 			compatible = "ramoops";
 			reg = <0x0 0xffc00000 0x0 0x100000>;
 			record-size = <0x10000>;
@@ -500,7 +523,7 @@
 	status = "okay";
 	clock-frequency = <400000>;
 
-	/* SONY ToF sensor @ 52 */
+	/* STMicroelectonics VL53L0 ToF sensor @ 52 */
 	/* AMS TCS3490 RGB+IR color sensor @ 72 */
 };
 
@@ -643,6 +666,12 @@
 		drive-push-pull;
 		output-low;
 	};
+};
+
+&pmi8998_haptics {
+	status = "okay";
+
+	qcom,wave-play-rate-us = <8621>;
 };
 
 &pmi8998_wled {
@@ -801,6 +830,61 @@
 			drive-strength = <2>;
 			bias-pull-down;
 		};
+	};
+
+	sim_detect: sim-detect-state {
+		sim1-detect-pins {
+			pins = "gpio112";
+			function = "gpio";
+			drive-strength = <2>;
+			bias-pull-down;
+		};
+	};
+
+	water_detection: water-detection-state {
+		enable-pins {
+			pins = "gpio28";
+			function = "gpio";
+			drive-strength = <2>;
+			bias-pull-down;
+		};
+
+		wrt-det-and-pins {
+			pins = "gpio29";
+			function = "gpio";
+			drive-strength = <2>;
+			bias-pull-down;
+		};
+
+		wrt-det-or-pins {
+			pins = "gpio30";
+			function = "gpio";
+			drive-strength = <2>;
+			bias-pull-down;
+		};
+	};
+
+	hwid: hwid-state {
+		hwid0-pins {
+			pins = "gpio75";
+			function = "gpio";
+			drive-strength = <2>;
+			bias-disable;
+		};
+
+		hwid1-pins {
+			pins = "gpio76";
+			function = "gpio";
+			drive-strength = <2>;
+			bias-disable;
+		};
+	};
+
+	hall_sensor_default: hall-sensor-default-state {
+		pins = "gpio124";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-disable;
 	};
 };
 
