@@ -117,6 +117,13 @@
 		vin-supply = <&vph_pwr>;
 	};
 
+	battery: battery {
+		compatible = "simple-battery";
+		charge-full-design-microamp-hours = <3325000>;
+		voltage-min-design-microvolt = <3400000>;
+		voltage-max-design-microvolt = <4380000>;
+	};
+
 	reserved-memory {
 		/* SONY was cool and didn't diverge from MTP this time, yay! */
 		cont_splash_mem: memory@9d400000 {
