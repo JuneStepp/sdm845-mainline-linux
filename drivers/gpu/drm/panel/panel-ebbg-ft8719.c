@@ -204,6 +204,8 @@ static int ebbg_ft8719_probe(struct mipi_dsi_device *dsi)
 
 	drm_panel_add(&ctx->panel);
 
+	ctx->panel.prepare_prev_first = true;
+
 	ret = mipi_dsi_attach(dsi);
 	if (ret < 0) {
 		dev_err(dev, "Failed to attach to DSI host: %d\n", ret);
