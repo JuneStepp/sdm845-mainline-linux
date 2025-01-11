@@ -79,6 +79,7 @@ config QCOM_PD_MAPPER
 	select AUXILIARY_BUS
 	depends on NET && QRTR && (ARCH_QCOM || COMPILE_TEST)
 	default QCOM_RPROC_COMMON
+	depends on BROKEN
 	help
 	  The Protection Domain Mapper maps registered services to the domains
 	  and instances handled by the remote DSPs. This is a kernel-space
