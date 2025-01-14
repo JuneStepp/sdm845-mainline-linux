@@ -73,8 +73,203 @@ static const struct wcn3990_slim_channel wcn3990_channels_rx[] = {
 
 };
 
+static int disconnect_port_from_channel(struct wcn3990_codec *wcn)
+{
+	struct slim_val_inf msg = {0};
+	struct slim_msg_txn txn;
+	u8 wbuf[2] = {0};
+	int ret;
+
+	// TODO: msg empty?
+	wbuf[0] = port_number; // TODO
+	wbuf[1] = channel; // TODO
+
+	txn.mt = 0;
+	txn.dt = SLIM_MSG_DEST_LOGICALADDR;
+	txn.la = wcn->logical_addr;
+	txn.ec = 0;
+
+	txn.mc = SLIM_MSG_MC_DISCONNECT_PORT;
+	txn.rl = 6;
+	txn.msg = &msg;
+	txn.msg->num_bytes = 2;
+	txn.msg->wbuf = wbuf;
+	txn.msg->rbuf = NULL;
+
+	ret = slim_alloc_txn_tid(wcn->ctrl, &txn);
+
+	return ret;
+}
+
+static int connect_source_to_channel(struct wcn3990_codec *wcn)
+{
+	struct slim_val_inf msg = {0};
+	struct slim_msg_txn txn;
+	u8 wbuf[2] = {0};
+	int ret;
+
+	// TODO: msg empty?
+	wbuf[0] = port_number; // TODO
+	wbuf[1] = channel; // TODO
+
+	txn.mt = 0;
+	txn.dt = SLIM_MSG_DEST_LOGICALADDR;
+	txn.la = wcn->logical_addr;
+	txn.ec = 0;
+
+	txn.mc = SLIM_MSG_MC_CONNECT_SOURCE;
+	txn.rl = 6;
+	txn.msg = &msg;
+	txn.msg->num_bytes = 2;
+	txn.msg->wbuf = wbuf;
+	txn.msg->rbuf = NULL;
+
+	ret = slim_alloc_txn_tid(wcn->ctrl, &txn);
+
+	return ret;
+}
+
+static int connect_sink_to_channel(struct wcn3990_codec *wcn)
+{
+	struct slim_val_inf msg = {0};
+	struct slim_msg_txn txn;
+	u8 wbuf[2] = {0};
+	int ret;
+
+	// TODO: msg empty?
+	wbuf[0] = port_number; // TODO
+	wbuf[1] = channel; // TODO
+
+	txn.mt = 0;
+	txn.dt = SLIM_MSG_DEST_LOGICALADDR;
+	txn.la = wcn->logical_addr;
+	txn.ec = 0;
+
+	txn.mc = SLIM_MSG_MC_CONNECT_SINK;
+	txn.rl = 6;
+	txn.msg = &msg;
+	txn.msg->num_bytes = 2;
+	txn.msg->wbuf = wbuf;
+	txn.msg->rbuf = NULL;
+
+	ret = slim_alloc_txn_tid(wcn->ctrl, &txn);
+
+	return ret;
+}
+
+static int enable_port(struct wcn3990_codec *wcn, wcn3990_slim_channel *channel) {
+	uint8_t value;
+	uint8_t previous_value;
+	uint16_t reg;
+	int ret;
+
+	switch(channel->type) {
+		/* RX ports for SCO (16) and A2DP (17) */
+		case WCN3990_TYPE_PORT_RX:
+			/* Multichannel setting */
+			reg = WCN3990_RX_PORTn_MULTI_CHNL_0(channel->port);
+			value = 0x01 << (channel->port - 16);
+
+			/* For 44.1 and 88.2Khz, read the bit first and merge it before setting it */
+			if (wcn->sample_rate == 44100 || wcn->sample_rate == 88200) {
+				ret =  // read
+				value = previous_value & ~value;
+			}
+
+			ret = //write
+			if (!ret)
+				return ret;
+		
+			/* Enable port */
+			reg = WCN3990_RX_PORT_CFGN(n);
+			value = WCN3990_PORT_ENABLE | WCN3990_PORT_WM_LB;
+			ret = //write
+			break;
+		/* TX port for SCO (0) */
+		case WCN3990_TYPE_PORT_TX:
+			/* Multichannel setting */
+			reg = WCN3990_TX_PORTn_MULTI_CHNL_0(channel->port);
+			value = 0x1 << channel->port;
+			ret = //write
+			if (!ret)
+				return ret;
+
+			/* Enable HW under- and overrun auto recovery */
+			reg = WCN3990_TX_PORT_RECOVERY(channel->port);
+			value = (WCN3990_ENABLE_OVERRUN_RECOVERY | WCN3990_ENABLE_UNDERRUN_RECOVERY);
+			ret = //write
+			if (!ret)
+				return ret;
+
+			/* Enable port */
+			reg = WCN3990_TX_PORT_CFGN(channel->port);
+			value = WCN3990_PORT_ENABLE | WCN3990_PORT_WM_L1;
+			ret = //write
+			break;
+		/* TX ports for FM radio (1,2) */
+		case WCN3990_TYPE_PORT_FM:
+			/* Multichannel setting */
+			reg = WCN3990_TX_PORTn_MULTI_CHNL_0(channel->port);
+			value = 0x1 << channel->port;
+			// TODO: check chipset version not 0300, then also if/else here, see L66-67 downstream
+			ret = //write
+			if (!ret)
+				return ret;
+
+			/* Enable HW under- and overrun auto recovery */
+			reg = WCN3990_TX_PORT_RECOVERY(channel->port);
+			value = (WCN3990_ENABLE_OVERRUN_RECOVERY | WCN3990_ENABLE_UNDERRUN_RECOVERY);
+			ret = //write
+			if (!ret)
+				return ret;
+
+			/* Enable port */
+			reg = WCN3990_TX_PORT_CFGN(channel->port);
+			value = WCN3990_PORT_ENABLE | WCN3990_PORT_WM_L8;
+			ret = //write
+			break;
+		default:
+			dev_err(dev, "Invalid port type: %d\n", channel->type);
+	}
+
+	return ret;
+}
+
+static int disable_port(struct wcn3990_codec *wcn, wcn3990_slim_channel *channel) {
+	uint8_t value;
+	uint8_t previous_value;
+	uint16_t reg;
+	int ret;
+
+	switch(channel->type) {
+		/* RX ports for SCO (16) and A2DP (17) */
+		case WCN3990_TYPE_PORT_RX:
+			reg = WCN3990_RX_PORT_CFGN(n);
+			value = WCN3990_PORT_DISABLE;
+			ret = //write
+			break;
+		/* TX port for SCO (0) */
+		case WCN3990_TYPE_PORT_TX:
+			reg = WCN3990_TX_PORT_CFGN(channel->port);
+			value = WCN3990_PORT_DISABLE;
+			ret = //write
+			break;
+		/* TX ports for FM radio (1,2) */
+		case WCN3990_TYPE_PORT_FM:
+			reg = WCN3990_TX_PORT_CFGN(channel->port);
+			value = WCN3990_PORT_DISABLE | WCN3990_PORT_WM_L8;
+			ret = //write
+			break;
+		default:
+			dev_err(dev, "Invalid port type: %d\n", channel->type);
+	}
+
+	return ret;
+}
+
 /* Find a SLIMBus audio channel based on DAI ID */
-static wcn3990_slim_channel *find_channel(struct snd_soc_dai *dai) {
+static wcn3990_slim_channel *find_channel(struct snd_soc_dai *dai)
+{
 	struct device *dev = dai->dev;
 	struct wcn3990_slim_channel *channel;
 	bool found = false;
