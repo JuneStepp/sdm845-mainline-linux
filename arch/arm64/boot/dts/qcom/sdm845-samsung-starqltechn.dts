@@ -49,9 +49,6 @@
 			height = <2960>;
 			stride = <(1440 * 4)>;
 			format = "a8r8g8b8";
-			vci-supply = <&s2dos05_ldo4>;
-			vddr-supply = <&s2dos05_buck>;
-			vdd3-supply = <&s2dos05_ldo1>;
 		};
 	};
 
@@ -639,13 +636,6 @@
 		interrupt-parent = <&pm8998_gpios>;
 		interrupts = <11 IRQ_TYPE_LEVEL_LOW>;
 	};
-
-	extcon_usb: extcon@25 {
-		reg = <0x25>;
-		compatible = "maxim,max77705-extcon";
-		interrupt-parent = <&pm8998_gpios>;
-		interrupts = <11 IRQ_TYPE_LEVEL_LOW>;
-	};
 };
 
 &ufs_mem_hc {
@@ -696,42 +686,6 @@
 	status = "okay";
 };
 
-<<<<<<< HEAD
-=======
-&q6cvp {
-	status = "okay";
-};
-
-&q6cvs {
-	status = "okay";
-};
-
-&q6mvm {
-	status = "okay";
-};
-
-&wcd9340 {
-	reset-gpios = <&tlmm 64 GPIO_ACTIVE_HIGH>;
-	vdd-buck-supply = <&vreg_s4a_1p8>;
-	vdd-buck-sido-supply = <&vreg_s4a_1p8>;
-	vdd-tx-supply = <&vreg_s4a_1p8>;
-	vdd-rx-supply = <&vreg_s4a_1p8>;
-	vdd-io-supply = <&vreg_s4a_1p8>;
-	qcom,micbias1-microvolt = <1800000>;
-	qcom,micbias2-microvolt = <2700000>;
-	qcom,micbias3-microvolt = <1800000>;
-	qcom,micbias4-microvolt = <1800000>;
-};
-
-&slpi_pas {
-	firmware-name = "qcom/sdm845/starqltechn/slpi.mbn";
-	status = "okay";
-
-//	vdd-cx-supply = <&vdd-l1-l27-supply>;
-//	vdd-cx-supply = <&vdd-l4-l5-supply>;
-};
-
->>>>>>> 24c81517a137 (dts fixup)
 &sound {
 	compatible = "qcom,sdm845-sndcard";
 	model = "Samsung Galaxy S9";
@@ -941,6 +895,14 @@
 	status = "okay";
 };
 
+&slpi_pas {
+	firmware-name = "qcom/sdm845/starqltechn/slpi.mbn";
+	status = "okay";
+
+//	vdd-cx-supply = <&vdd-l1-l27-supply>;
+//	vdd-cx-supply = <&vdd-l4-l5-supply>;
+};
+
 &usb_1 {
 	status = "okay";
 };
@@ -949,6 +911,8 @@
 	/* Until we have Type C hooked up we'll force this as peripheral. */
 	dr_mode = "peripheral";
 };
+
+
 
 &usb_1_hsphy {
 	vdd-supply = <&vdda_usb1_ss_core>;
