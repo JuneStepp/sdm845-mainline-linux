@@ -1095,17 +1095,23 @@ static int imx376_power_on(struct device *dev)
 
 	usleep_range(400, 600);
 
-	gpiod_set_value_cansleep(imx376->reset_gpio, 1);
+	gpiod_set_value_cansleep(imx376->reset_gpio, 0);
 
 	ret = clk_prepare_enable(imx376->clk);
 	if (ret) {
-		dev_err(dev, "failed to enable clock\n");
-		regulator_bulk_disable(IMX376_NUM_SUPPLIES, imx376->supplies);
+		dev_err(dev, "failed to enable inclk\n");
+		goto error_reset;
 	}
 
 	usleep_range(1000, 1200);
 
 	return 0;
+
+error_reset:
+	gpiod_set_value_cansleep(imx376->reset_gpio, 1);
+	regulator_bulk_disable(IMX376_NUM_SUPPLIES, imx376->supplies);
+
+	return ret;
 }
 
 static int imx376_power_off(struct device *dev)
@@ -1115,7 +1121,7 @@ static int imx376_power_off(struct device *dev)
 
 	clk_disable_unprepare(imx376->clk);
 
-	gpiod_set_value_cansleep(imx376->reset_gpio, 0);
+	gpiod_set_value_cansleep(imx376->reset_gpio, 1);
 
 	regulator_bulk_disable(IMX376_NUM_SUPPLIES, imx376->supplies);
 
