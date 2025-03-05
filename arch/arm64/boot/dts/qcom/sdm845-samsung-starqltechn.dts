@@ -22,7 +22,6 @@
 /delete-node/ &rmtfs_mem;
 /delete-node/ &spss_mem;
 /delete-node/ &adsp_mem;
-/delete-node/ &slpi_mem;
 
 / {
 	chassis-type = "handset";
@@ -117,8 +116,8 @@
 			no-map;
 		};
 
-		spss_mem: spss@97700000 {
-			reg = <0 0x97700000 0 0x100000>;
+		slpi_mem: slpi@96700000 {
+			reg = <0 0x96700000 0 0xf00000>;
 			no-map;
 		};
 
@@ -693,6 +692,11 @@
 };
 
 &lpasscc {
+	status = "okay";
+};
+
+&slpi_pas {
+	firmware-name = "qcom/sdm845/starqltechn/slpi.mbn";
 	status = "okay";
 };
 
