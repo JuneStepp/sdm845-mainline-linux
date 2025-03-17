@@ -159,11 +159,8 @@
 
 	aliases {
 		serial0 = &uart9;
+		serial1 = &uart6;
 	};
-};
-
-&adsp_pas {
-	status = "okay";
 };
 
 &apps_rsc {
@@ -450,12 +447,8 @@
 	};
 };
 
-&cdsp_pas {
-	status = "okay";
-};
-
 &dispcc {
-	status = "disabled";
+       status = "disabled";
 };
 
 &gcc {
@@ -471,21 +464,41 @@
 
 	zap-shader {
 		memory-region = <&gpu_mem>;
+		firmware-name = "qcom/sdm845/judy/a630_zap.mbn";
 	};
 };
 
 &ipa {
 	qcom,gsi-loader = "modem";
+	memory-region = <&ipa_fw_mem>;
+	firmware-name = "qcom/sdm845/judy/ipa_fws.mbn";
 	status = "okay";
 };
 
 &mss_pil {
 	status = "okay";
+	firmware-name = "qcom/sdm845/judy/mba.mbn", "qcom/sdm845/judy/modem.mbn";
+};
+
+
+&adsp_pas {
+	status = "okay";
+	firmware-name = "qcom/sdm845/judy/adsp.mbn";
+};
+
+&cdsp_pas {
+	status = "okay";
+	firmware-name = "qcom/sdm845/judy/cdsp.mbn";
+};
+
+&venus {
+	status = "okay";
+	firmware-name = "qcom/sdm845/judy/venus.mbn";
 };
 
 &pm8998_resin {
-	linux,code = <KEY_VOLUMEDOWN>;
 	status = "okay";
+	linux,code = <KEY_VOLUMEDOWN>;
 };
 
 &sdhc_2 {
@@ -616,3 +629,39 @@
 &qupv3_id_1 {
 	status = "okay";
 };
+
+&wifi {
+	status = "okay";
+	vdd-0.8-cx-mx-supply = <&vreg_l5a_0p8>;
+	vdd-1.8-xo-supply = <&vreg_l7a_1p8>;
+	vdd-1.3-rfa-supply = <&vreg_l17a_1p3>;
+	vdd-3.3-ch0-supply = <&vreg_l25a_3p3>;
+	vdd-3.3-ch1-supply = <&vreg_l23a_3p3>;
+
+	qcom,snoc-host-cap-skip-quirk;
+	qcom,ath10k-calibration-variant = "lg_judy";
+};
+
+&uart6 {
+	status = "okay";
+
+	pinctrl-0 = <&qup_uart6_4pin>;
+
+	bluetooth {
+		compatible = "qcom,wcn3990-bt";
+
+		/*
+		 * This path is relative to the qca/
+		 * subdir under lib/firmware.
+		 */
+		firmware-name = "judy/crnv21.bin";
+
+		vddio-supply = <&vreg_s4a_1p8>;
+		vddxo-supply = <&vreg_l7a_1p8>;
+		vddrf-supply = <&vreg_l17a_1p3>;
+		vddch0-supply = <&vreg_l25a_3p3>;
+		max-speed = <3200000>;
+	};
+};
+
+

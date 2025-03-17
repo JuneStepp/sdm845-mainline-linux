@@ -67,39 +67,8 @@
 	};
 };
 
-&adsp_pas {
-	firmware-name = "qcom/sdm845/judyln/adsp.mbn";
-};
-
-&cdsp_pas {
-	firmware-name = "qcom/sdm845/judyln/cdsp.mbn";
-};
-
 &gmu {
 	status = "okay";
-};
-
-&gpu {
-	status = "okay";
-
-	zap-shader {
-		memory-region = <&gpu_mem>;
-		firmware-name = "qcom/sdm845/judyln/a630_zap.mbn";
-	};
-};
-
-&ipa {
-	qcom,gsi-loader = "self";
-	memory-region = <&ipa_fw_mem>;
-	firmware-name = "qcom/sdm845/judyln/ipa_fws.mbn";
-};
-
-&mss_pil {
-	firmware-name = "qcom/sdm845/judyln/mba.mbn", "qcom/sdm845/judyln/modem.mbn";
-};
-
-&venus {
-	firmware-name = "qcom/sdm845/judyln/venus.mbn";
 };
 
 &tlmm {
@@ -350,28 +319,6 @@
 	};
 };
 
-&uart6 {
-	status = "okay";
-
-	pinctrl-0 = <&qup_uart6_4pin>;
-
-	bluetooth {
-		compatible = "qcom,wcn3990-bt";
-
-		/*
-		 * This path is relative to the qca/
-		 * subdir under lib/firmware.
-		 */
-		firmware-name = "judyln/crnv21.bin";
-
-		vddio-supply = <&vreg_s4a_1p8>;
-		vddxo-supply = <&vreg_l7a_1p8>;
-		vddrf-supply = <&vreg_l17a_1p3>;
-		vddch0-supply = <&vreg_l25a_3p3>;
-		max-speed = <3200000>;
-	};
-};
-
 &i2c3 {
 	status = "okay";
 };
@@ -392,17 +339,6 @@
 		compatible = "nxp,tfa9894";
 		reg = <0x34>;
 	};
-};
-
-&wifi {
-	status = "okay";
-	vdd-0.8-cx-mx-supply = <&vreg_l5a_0p8>;
-	vdd-1.8-xo-supply = <&vreg_l7a_1p8>;
-	vdd-1.3-rfa-supply = <&vreg_l17a_1p3>;
-	vdd-3.3-ch0-supply = <&vreg_l25a_3p3>;
-	vdd-3.3-ch1-supply = <&vreg_l23a_3p3>;
-
-	qcom,snoc-host-cap-8bit-quirk;
 };
 
 &usb_1_dwc3 {
