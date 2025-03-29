@@ -1,21 +1,3 @@
-/* 
- * Copyright (C) 2014-2020 NXP Semiconductors, All Rights Reserved.
- * Copyright 2021 GOODIX 
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- *
- */
-
-
-/*
- * tfaContainer.h
- *
- *  Created on: Sep 11, 2013
- *      Author: wim
- */
-
 #ifndef TFACONTAINER_H_
 #define TFACONTAINER_H_
 

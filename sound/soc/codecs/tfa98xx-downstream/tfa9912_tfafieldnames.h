@@ -1,14 +1,3 @@
-/* 
- * Copyright (C) 2014-2020 NXP Semiconductors, All Rights Reserved.
- * Copyright 2021 GOODIX 
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- *
- */
-
-
 /** Filename: tfa9912_tfaFieldnames.h
  *  This file was generated automatically on 09/28/18 at 12:00:21. 
  *  Source file: TFA9912_N1A_I2C_regmap_V1.43.xlsx

@@ -1,40 +1,9 @@
-/* 
- * Copyright (C) 2014-2020 NXP Semiconductors, All Rights Reserved.
- * Copyright 2021 GOODIX 
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- *
- */
-
-
-/*
- * tfa98xx_parameters.h
- *
- *  Created on: Jul 22, 2013
- *      Author: NLV02095
- */
-
 #ifndef TFA98XXPARAMETERS_H_
 #define TFA98XXPARAMETERS_H_
 
-//#include "config.h"
-// workaround for Visual Studio: 
-// fatal error C1083: Cannot open include file: 'config.h': No such file or directory
-#ifdef __KERNEL__
 #include <linux/types.h>
-#else
-#include <stdint.h>
-#endif
 
 #include "tfa_service.h"
-
-#if (defined(WIN32) || defined(_X64))
-/* These warnings are disabled because it is only given by Windows and there is no easy fix */
-#pragma warning(disable:4200)
-#pragma warning(disable:4214)
-#endif
 
 /*
  * profiles & volumesteps

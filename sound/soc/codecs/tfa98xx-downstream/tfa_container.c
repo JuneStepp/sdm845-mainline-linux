@@ -1,14 +1,3 @@
-/* 
- * Copyright (C) 2014-2020 NXP Semiconductors, All Rights Reserved.
- * Copyright 2020 GOODIX 
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- *
- */
-
-
 #include "dbgprint.h"
 #include "tfa_container.h"
 #include "tfa.h"
@@ -21,13 +10,6 @@
 
 /* module globals */
 static uint8_t gslave_address = 0; /* This is used to SET the slave with the --slave option */
-
-static int float_to_int(uint32_t x)
-{
-	unsigned e = (0x7F + 31) - ((*(unsigned *)&x & 0x7F800000) >> 23);
-	unsigned m = 0x80000000 | (*(unsigned *)&x << 8);
-	return -(int)((m >> e) & -(e < 32));
-}
 
 /*
  * check the container file
@@ -193,19 +175,11 @@ int tfacont_get_max_vstep(struct tfa_device *tfa, int prof_idx) {
 	if (vp == NULL)
 		return 0;
 	/* check the header type to load different NrOfVStep appropriately */
-	if (tfa->tfa_family == 2) {
-		/* this is actually tfa2, so re-read the buffer*/
-		vp3 = (struct TfaVolumeStepMax2File *)
-			tfacont_getfiledata(tfa, prof_idx, volstepHdr);
-		if (vp3) {
-			vstep_count = vp3->NrOfVsteps;
-		}
-	}
-	else {
-		/* this is max1*/
-		if (vp) {
-			vstep_count = vp->vsteps;
-		}
+	/* this is actually tfa2, so re-read the buffer*/
+	vp3 = (struct TfaVolumeStepMax2File *)
+		tfacont_getfiledata(tfa, prof_idx, volstepHdr);
+	if (vp3) {
+		vstep_count = vp3->NrOfVsteps;
 	}
 	return vstep_count;
 }
@@ -276,40 +250,6 @@ TfaFileDsc_t *tfacont_getfiledata(struct tfa_device *tfa, int prof_idx, enum Tfa
 		pr_debug("%s: no file found of type %d\n", __FUNCTION__, type);
 
 	return NULL;
-}
-
-/*
- * write a parameter file to the device
- */
-static enum Tfa98xx_Error tfaContWriteVstep(struct tfa_device *tfa, TfaVolumeStep2File_t *vp, int vstep)
-{
-	enum Tfa98xx_Error err;
-	unsigned short vol;
-
-	if (vstep < vp->vsteps) {
-		/* vol = (unsigned short)(voldB / (-0.5f)); */
-		vol = (unsigned short)(-2 * float_to_int(*((uint32_t *)&vp->vstep[vstep].attenuation)));
-		if (vol > 255)	/* restricted to 8 bits */
-			vol = 255;
-
-		err = tfa98xx_set_volume_level(tfa, vol);
-		if (err != Tfa98xx_Error_Ok)
-			return err;
-
-		err = tfa98xx_dsp_write_preset(tfa, sizeof(vp->vstep[0].preset), vp->vstep[vstep].preset);
-		if (err != Tfa98xx_Error_Ok)
-			return err;
-		err = tfa_cont_write_filterbank(tfa, vp->vstep[vstep].filter);
-
-	}
-	else {
-		pr_err("Incorrect volume given. The value vstep[%d] >= %d\n", vstep, vp->vsteps);
-		err = Tfa98xx_Error_Bad_Parameter;
-	}
-
-	if (tfa->verbose) pr_debug("vstep[%d][%d]\n", tfa->dev_idx, vstep);
-
-	return err;
 }
 
 static struct TfaVolumeStepMessageInfo *
@@ -670,7 +610,7 @@ enum Tfa98xx_Error tfaContWriteFile(struct tfa_device *tfa, TfaFileDsc_t *file, 
 	}
 
 	type = (TfaHeaderType_t)hdr->id;
-	if ((type == msgHdr) || ((type == volstepHdr) && (tfa->tfa_family == 2)))
+	if ((type == msgHdr) || ((type == volstepHdr)))
 	{
 		subVerString[0] = hdr->subversion[0];
 		subVerString[1] = hdr->subversion[1];
@@ -714,26 +654,14 @@ enum Tfa98xx_Error tfaContWriteFile(struct tfa_device *tfa, TfaFileDsc_t *file, 
 		err = tfa_dsp_msg(tfa, size, (const char *)((TfaMsgFile_t *)hdr)->data);
 		break;
 	case volstepHdr:
-		if (tfa->tfa_family == 2) {
-			err = tfaContWriteVstepMax2(tfa, (TfaVolumeStepMax2File_t *)hdr, vstep_idx, vstep_msg_idx);
-		}
-		else {
-			err = tfaContWriteVstep(tfa, (TfaVolumeStep2File_t *)hdr, vstep_idx);
-		}
+		err = tfaContWriteVstepMax2(tfa, (TfaVolumeStepMax2File_t *)hdr, vstep_idx, vstep_msg_idx);
 		break;
 	case speakerHdr:
-		if (tfa->tfa_family == 2) {
-			/* Remove header and xml_id */
-			size = hdr->size - sizeof(struct TfaSpkHeader) - sizeof(struct TfaFWVer);
+		/* Remove header and xml_id */
+		size = hdr->size - sizeof(struct TfaSpkHeader) - sizeof(struct TfaFWVer);
 
-			err = tfa_dsp_msg(tfa, size,
-				(const char *)(((TfaSpeakerFile_t *)hdr)->data + (sizeof(struct TfaFWVer))));
-		}
-		else {
-			size = hdr->size - sizeof(TfaSpeakerFile_t);
-			err = tfa98xx_dsp_write_speaker_parameters(tfa, size,
-				(const unsigned char *)((TfaSpeakerFile_t *)hdr)->data);
-		}
+		err = tfa_dsp_msg(tfa, size,
+			(const char *)(((TfaSpeakerFile_t *)hdr)->data + (sizeof(struct TfaFWVer))));
 		break;
 	case presetHdr:
 		size = hdr->size - sizeof(TfaPreset_t);
@@ -996,12 +924,7 @@ static enum Tfa98xx_Error tfaRunWriteDspMem(struct tfa_device *tfa, TfaDspMem_t 
  */
 static enum Tfa98xx_Error tfaRunWriteFilter(struct tfa_device *tfa, TfaContBiquad_t *bq)
 {
-	enum Tfa98xx_Error error = Tfa98xx_Error_Ok;
-	enum Tfa98xx_DMEM dmem;
-	uint16_t address;
-	uint8_t data[3 * 3 + sizeof(bq->aa.bytes)];
-	int i, channel = 0, runs = 1;
-	int8_t saved_index = bq->aa.index; /* This is used to set back the index */
+	int channel = 0, runs = 1;
 
 	/* Channel=1 is primary, Channel=2 is secondary*/
 	if (bq->aa.index > 100) {
@@ -1025,61 +948,8 @@ static enum Tfa98xx_Error tfaRunWriteFilter(struct tfa_device *tfa, TfaContBiqua
 			pr_debug("filter[%d]", bq->aa.index);
 	}
 
-	for (i = 0; i < runs; i++) {
-		if (runs == 2)
-			channel++;
-
-		/* get the target address for the filter on this device */
-		dmem = tfa98xx_filter_mem(tfa, bq->aa.index, &address, channel);
-		if (dmem == Tfa98xx_DMEM_ERR) {
-			if (tfa->verbose) {
-				pr_debug("Warning: XFilter settings are applied via msg file (ini filter[x] format is skipped).\n");
-			}
-			/* Dont exit with an error here, We could continue without problems */
-			return Tfa98xx_Error_Ok;
-		}
-
-		/* send a DSP memory message that targets the devices specific memory for the filter
-		 * msg params: which_mem, start_offset, num_words
-		 */
-		memset(data, 0, 3 * 3);
-		data[2] = dmem; /* output[0] = which_mem */
-		data[4] = address >> 8; /* output[1] = start_offset */
-		data[5] = address & 0xff;
-		data[8] = sizeof(bq->aa.bytes) / 3; /*output[2] = num_words */
-		memcpy(&data[9], bq->aa.bytes, sizeof(bq->aa.bytes)); /* payload */
-
-		if (tfa->tfa_family == 2) {
-			error = tfa_dsp_cmd_id_write(tfa, MODULE_FRAMEWORK, FW_PAR_ID_SET_MEMORY, sizeof(data), data);
-		}
-		else {
-			error = tfa_dsp_cmd_id_write(tfa, MODULE_FRAMEWORK, 4 /* param */, sizeof(data), data);
-		}
-	}
-
-#ifdef TFA_DEBUG
-	if (tfa->verbose) {
-		if (bq->aa.index == 13) {
-			pr_debug("=%d,%.0f,%.2f \n",
-				bq->in.type, bq->in.cutOffFreq, bq->in.leakage);
-		}
-		else if (bq->aa.index >= 10 && bq->aa.index <= 12) {
-			pr_debug("=%d,%.0f,%.1f,%.1f \n", bq->aa.type,
-				bq->aa.cutOffFreq, bq->aa.rippleDb, bq->aa.rolloff);
-		}
-		else {
-			pr_debug("= unsupported filter index \n");
-		}
-	}
-#endif
-
-	/* Because we can load the same filters multiple times
-	 * For example: When we switch profile we re-write in operating mode.
-	 * We then need to remember the index (primary, secondary or both)
-	 */
-	bq->aa.index = saved_index;
-
-	return error;
+	/* Dont exit with an error here, We could continue without problems */
+	return Tfa98xx_Error_Ok;
 }
 
 /*
@@ -1660,28 +1530,20 @@ enum Tfa98xx_Error tfaContWriteProfile(struct tfa_device *tfa, int prof_idx, int
 		}
 	}
 	else {
-		/* mute */
-		err = tfaRunMute(tfa);
-		if (err) return err;
-
 		/* Get current sample rate before we start switching */
 		fs_previous_profile = TFA_GET_BF(tfa, AUDFS);
 
 		/* clear SBSL to make sure we stay in initCF state */
-		if (tfa->tfa_family == 2) {
-			TFA_SET_BF_VOLATILE(tfa, SBSL, 0);
-		}
+		TFA_SET_BF_VOLATILE(tfa, SBSL, 0);
 
 		/* When we switch profile we first power down the subsystem
 		 * This should only be done when we are in operating mode
 		 */
 		if (tfa_is_94_N2_device(tfa))
 			manstate = tfa_get_bf(tfa, TFA9894N2_BF_MANSTATE);
-		else if ((tfa->rev & 0xff) == 0x75)
-			manstate = tfa_get_bf(tfa, TFA9875_BF_MANSTATE);
 		else
 			manstate = TFA_GET_BF(tfa, MANSTATE); 
-		if (((tfa->tfa_family == 2) && (manstate >= 6)) || (tfa->tfa_family != 2)) {
+		if (manstate >= 6) {
 			err = tfa98xx_powerdown(tfa, 1);
 			if (err) return err;
 
@@ -1692,8 +1554,6 @@ enum Tfa98xx_Error tfaContWriteProfile(struct tfa_device *tfa, int prof_idx, int
 
 				if (tfa_is_94_N2_device(tfa))
 					manstate = tfa_get_bf(tfa, TFA9894N2_BF_MANSTATE);
-				else if ((tfa->rev & 0xff) == 0x75)
-					manstate = tfa_get_bf(tfa, TFA9875_BF_MANSTATE);
 				else
 					manstate = TFA_GET_BF(tfa, MANSTATE); 
 				if (manstate == 6) {
@@ -1816,8 +1676,7 @@ enum Tfa98xx_Error tfaContWriteProfile(struct tfa_device *tfa, int prof_idx, int
 	}
 
 	if (prof->group != previous_prof->group || prof->group == 0) {
-		if (tfa->tfa_family == 2)
-			TFA_SET_BF_VOLATILE(tfa, MANSCONF, 1);
+		TFA_SET_BF_VOLATILE(tfa, MANSCONF, 1);
 
 		/* Leave powerdown state */
 		err = tfa_cf_powerup(tfa);
@@ -1825,12 +1684,10 @@ enum Tfa98xx_Error tfaContWriteProfile(struct tfa_device *tfa, int prof_idx, int
 
 		err = tfa_show_current_state(tfa);
 
-		if (tfa->tfa_family == 2) {
-			/* Reset SBSL to 0 (workaround of enbl_powerswitch=0) */
-			TFA_SET_BF_VOLATILE(tfa, SBSL, 0);
-			/* Sending commands to DSP we need to make sure RST is 0 (otherwise we get no response)*/
-			TFA_SET_BF(tfa, RST, 0);
-		}
+		/* Reset SBSL to 0 (workaround of enbl_powerswitch=0) */
+		TFA_SET_BF_VOLATILE(tfa, SBSL, 0);
+		/* Sending commands to DSP we need to make sure RST is 0 (otherwise we get no response)*/
+		TFA_SET_BF(tfa, RST, 0);
 	}
 
 	/* Check if there are sample rate changes */
@@ -1842,28 +1699,26 @@ enum Tfa98xx_Error tfaContWriteProfile(struct tfa_device *tfa, int prof_idx, int
 	 * Should only be used for the patch&trap patch (file)
 	 */
 	if (tfa->ext_dsp != 0) {
-		if (tfa->tfa_family == 2) {
-			for (i = 0; i < previous_prof->length; i++) {
-				/* Search for the default section */
-				if (i == 0) {
-					while (previous_prof->list[i].type != dscDefault && i < previous_prof->length) {
-						i++;
-					}
+		for (i = 0; i < previous_prof->length; i++) {
+			/* Search for the default section */
+			if (i == 0) {
+				while (previous_prof->list[i].type != dscDefault && i < previous_prof->length) {
 					i++;
 				}
+				i++;
+			}
 
-				/* Only if we found the default section try writing the file */
-				if (i < previous_prof->length) {
-					if (previous_prof->list[i].type == dscFile || previous_prof->list[i].type == dscPatch) {
-						/* Only write this once */
-						if (tfa->verbose && k == 0) {
-							pr_debug("---------- files default profile: %s (%d) ---------- \n",
-								tfaContGetString(tfa->cnt, &previous_prof->name), prof_idx);
-							k++;
-						}
-						file = (TfaFileDsc_t *)(previous_prof->list[i].offset + (uint8_t *)tfa->cnt);
-						err = tfaContWriteFile(tfa, file, vstep_idx, TFA_MAX_VSTEP_MSG_MARKER);
+			/* Only if we found the default section try writing the file */
+			if (i < previous_prof->length) {
+				if (previous_prof->list[i].type == dscFile || previous_prof->list[i].type == dscPatch) {
+					/* Only write this once */
+					if (tfa->verbose && k == 0) {
+						pr_debug("---------- files default profile: %s (%d) ---------- \n",
+							tfaContGetString(tfa->cnt, &previous_prof->name), prof_idx);
+						k++;
 					}
+					file = (TfaFileDsc_t *)(previous_prof->list[i].offset + (uint8_t *)tfa->cnt);
+					err = tfaContWriteFile(tfa, file, vstep_idx, TFA_MAX_VSTEP_MSG_MARKER);
 				}
 			}
 		}
@@ -1940,7 +1795,7 @@ enum Tfa98xx_Error tfaContWriteProfile(struct tfa_device *tfa, int prof_idx, int
 		}
 	}
 
-	if ((prof->group != previous_prof->group || prof->group == 0) && (tfa->tfa_family == 2)) {
+	if (prof->group != previous_prof->group || prof->group == 0) {
 		if (TFA_GET_BF(tfa, REFCKSEL) == 0) {
 			/* set SBSL to go to operation mode */
 			TFA_SET_BF_VOLATILE(tfa, SBSL, 1);

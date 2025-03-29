@@ -1,14 +1,3 @@
-/* 
- * Copyright (C) 2014-2020 NXP Semiconductors, All Rights Reserved.
- * Copyright 2021 GOODIX 
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- *
- */
-
-
 /**\file
  *
  * The tfa_device interface controls a single I2C device instance by
@@ -116,7 +105,6 @@ struct tfa_device {
 	int bitwidth;       /**bitwdith from alsa input stream*/
 	unsigned char slave_address; /**< I2C slave address (not shifted) */
 	unsigned short rev;     /**< full revid of this device */
-	unsigned char tfa_family; /**< tfa1/tfa2 */
 	enum featureSupport supportDrc;
 	enum featureSupport supportFramework;
 	enum featureSupport support_saam;
@@ -278,38 +266,6 @@ int tfa_dev_mtp_get(struct tfa_device *tfa, enum tfa_mtp item);
  *
  */
 enum tfa_error tfa_dev_mtp_set(struct tfa_device *tfa, enum tfa_mtp item, int value);
-
-
-//irq
-/* tfa2 interrupt support
- *    !!! enum tfa9912_irq !!!*/
-/*
- * interrupt bit function to clear
- */
-int tfa_irq_clear(struct tfa_device *tfa, int bit);
-/*
- * return state of irq or -1 if illegal bit
- */
-int tfa_irq_get(struct tfa_device *tfa, int bit);
-/*
- * interrupt bit function that operates on the shadow regs in the handle
- */
-int tfa_irq_ena(struct tfa_device *tfa, int bit, int state);
-/*
- * interrupt bit function that sets the polarity
- */
-int tfa_irq_set_pol(struct tfa_device *tfa, int bit, int state);
-
-/*
- * mask interrupts by disabling them
- */
-int tfa_irq_mask(struct tfa_device *tfa);
-/*
- * unmask interrupts by enabling them again
- */
-int tfa_irq_unmask(struct tfa_device *tfa);
-//cnt read
-//debug?
 
 #endif /* __TFA_DEVICE_H__ */
 

@@ -1,20 +1,3 @@
-/* 
- * Copyright (C) 2014-2020 NXP Semiconductors, All Rights Reserved.
- * Copyright 2021 GOODIX 
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- *
- */
-
-
-
-/*
-	Linux kernel specific definitions used by code shared with
-	Linux/Windows user space.
-*/
-
 #ifndef __CONFIG_LINUX_KERNEL_INC__
 #define __CONFIG_LINUX_KERNEL_INC__
 
@@ -24,7 +7,6 @@
 #include <linux/crc32.h>
 #include <linux/ftrace.h>
 
-#define _ASSERT(e)
 #define PRINT_ASSERT(e)if ((e)) printk(KERN_ERR "PrintAssert:%s (%s:%d) error code:%d\n",__FUNCTION__,__FILE__,__LINE__, e)
 
 #if defined(CONFIG_TRACING) && defined(DEBUG)

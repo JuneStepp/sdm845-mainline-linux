@@ -1,14 +1,3 @@
-/* 
- * Copyright (C) 2014-2020 NXP Semiconductors, All Rights Reserved.
- * Copyright 2021 GOODIX 
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- *
- */
-
-
 /** Filename: tfa9894_tfaFieldnames_N1Last.h
  *  This file was generated automatically on 09/28/18 at 11:24:56. 
  *  Source file: TFA9894_N1A1_I2C_RegisterMap.xlsx

@@ -1,41 +1,7 @@
-/* 
- * Copyright (C) 2014-2020 NXP Semiconductors, All Rights Reserved.
- * Copyright 2021 GOODIX 
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- *
- */
-
-
-
 #ifndef TFA_SERVICE_H
 #define TFA_SERVICE_H
 
-//#include "config.h"
-// workaround for Visual Studio: 
-// fatal error C1083: Cannot open include file: 'config.h': No such file or directory
-#ifdef __KERNEL__
 #include <linux/types.h>
-#else
-#include <stdint.h>
-#endif
-#ifdef __cplusplus
-extern "C" {
-#include "TFA_I2C.h"
-#endif
-
-/* Linux kernel module defines TFA98XX_GIT_VERSIONS in the linux_driver/Makefile */
-#if 0
-#include "versions.h"
-#endif
-#ifdef TFA98XX_GIT_VERSIONS
-  #define TFA98XX_API_REV_STR "v6.7.14"/*TFA98XX_GIT_VERSIONS*/
-#else
-  #define TFA98XX_API_REV_STR "v6.7.14"
-#endif
-
 #include "tfa_device.h"
 
 /*
@@ -306,11 +272,6 @@ enum Tfa98xx_DMEM {
 };
 
 /**
- * lookup the device type and return the family type
- */
-int tfa98xx_dev2family(int dev_type);
-
-/**
  *  register definition structure
  */
 struct regdef {
@@ -319,8 +280,6 @@ struct regdef {
 	unsigned short pwronTestmask;	/**< mask of bits not test */
 	char *name;						/**< short register name */
 };
-
-enum Tfa98xx_DMEM tfa98xx_filter_mem(struct tfa_device *tfa, int filter_index, unsigned short *address, int channel);
 
 /**
  * Load the default HW settings in the device
@@ -397,11 +356,6 @@ enum Tfa98xx_Error tfa98xx_set_mute(struct tfa_device *tfa,
  *  returns the number of the supported speaker count
  */
 enum Tfa98xx_Error tfa_supported_speakers(struct tfa_device *tfa, int* spkr_count);
-
-/**
-* Return the tfa revision
-*/
-void tfa98xx_rev(int *major, int *minor, int *revision);
 
 /*
  * Return the feature bits from MTP and cnt file for comparison
@@ -573,11 +527,6 @@ tfa_dsp_get_calibration_impedance(struct tfa_device *tfa);
  * return the mohm value
  */
 int tfa_get_calibration_info(struct tfa_device *tfa, int channel);
-
-/*
- * return sign extended tap pattern
- */
-int tfa_get_tap_pattern(struct tfa_device *tfa);
 
 /**
  * Reads a number of words from dsp memory
@@ -869,8 +818,8 @@ uint16_t tfaContBfEnum(const char *name, unsigned short rev);
  */
 uint16_t tfaContBfEnumAny(const char *name);
 
-#define TFA_FAM(tfa, fieldname) ((tfa->tfa_family == 1) ? TFA1_BF_##fieldname :  TFA2_BF_##fieldname)
-#define TFA_FAM_FW(tfa, fwname) ((tfa->tfa_family == 1) ? TFA1_FW_##fwname :  TFA2_FW_##fwname)
+#define TFA_FAM(tfa, fieldname) (TFA2_BF_##fieldname)
+#define TFA_FAM_FW(tfa, fwname) (TFA2_FW_##fwname)
 #define TFA2_FAM_TDM(tfa, fieldname) (((tfa->rev & 0xff) == 0x94) ? TFA9894_BF_##fieldname :  TFA2_BF_##fieldname)
 
 /* set/get bit fields to HW register*/
@@ -896,7 +845,6 @@ uint16_t tfaContBfEnumAny(const char *name);
  * @param state the cold start state that is requested
  */
 enum Tfa98xx_Error tfaRunColdboot(struct tfa_device *tfa, int state);
-enum Tfa98xx_Error tfaRunMute(struct tfa_device *tfa);
 enum Tfa98xx_Error tfaRunUnmute(struct tfa_device *tfa);
 
 /**
@@ -996,8 +944,6 @@ int tfa_is_cold(struct tfa_device *tfa);
 
 void tfa_set_query_info(struct tfa_device *tfa);
 
-int tfa_get_pga_gain(struct tfa_device *tfa);
-int tfa_set_pga_gain(struct tfa_device *tfa, uint16_t value);
 int tfa_get_noclk(struct tfa_device *tfa);
 
 /**
@@ -1014,7 +960,4 @@ enum Tfa98xx_Error tfa_status(struct tfa_device *tfa);
 int tfa_dev_get_mtpb(struct tfa_device *tfa);
 
 enum Tfa98xx_Error tfaGetFwApiVersion(struct tfa_device *tfa, unsigned char *pFirmwareVersion);
-#ifdef __cplusplus
-}
-#endif
 #endif				/* TFA_SERVICE_H */

@@ -1,13 +1,3 @@
-/* 
- * Copyright (C) 2014-2020 NXP Semiconductors, All Rights Reserved.
- * Copyright 2021 GOODIX 
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- *
- */
-
 #ifndef __TFA98XX_INC__
 #define __TFA98XX_INC__
 
@@ -36,9 +26,6 @@
 #define TFA98XX_FLAG_ADAPT_NOISE_MODE   (1 << 9)
 
 #define TFA98XX_NUM_RATES		9
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,0,0)
-#define FW_ACTION_HOTPLUG 1
-#endif
 
 /* DSP init status */
 enum tfa98xx_dsp_init_state {
@@ -70,19 +57,12 @@ struct tfa98xx_baseprofile {
 	int sr_rate_sup[TFA98XX_NUM_RATES]; /* sample rates supported by this profile */
 	struct list_head list;              /* list of all profiles */
 };
-enum tfa_reset_polarity{
-	LOW=0,
-	HIGH=1
-};
+
 struct tfa98xx {
 	struct regmap *regmap;
 	struct i2c_client *i2c;
 	struct regulator *vdd;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,18,0)
 	struct snd_soc_component *codec;
-#else
-	struct snd_soc_codec *codec;
-#endif
 	struct workqueue_struct *tfa98xx_wq;
 	struct delayed_work init_work;
 	struct delayed_work monitor_work;
@@ -114,9 +94,6 @@ struct tfa98xx {
 	struct snd_pcm_hw_constraint_list rate_constraint;
 
 	int reset_gpio;
-	int power_gpio;
-	int irq_gpio;
-	enum tfa_reset_polarity reset_polarity; 
 	struct list_head list;
 	struct tfa_device *tfa;
 	int vstep;
