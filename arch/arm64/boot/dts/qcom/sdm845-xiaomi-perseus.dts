@@ -24,6 +24,7 @@
 * Delete following upstream (sdm845.dtsi) reserved
 * memory mappings which are different in this device.
 */
+/delete-node/ &tz_mem;
 /delete-node/ &adsp_mem;
 /delete-node/ &wlan_msa_mem;
 /delete-node/ &mpss_region;
@@ -87,6 +88,11 @@
 	};
 
 	reserved-memory {
+		tz_mem: memory@86200000 {
+			reg = <0 0x86200000 0 0x4900000>;
+			no-map;
+		};
+
 		adsp_mem: memory@8c500000 {
 			reg = <0 0x8c500000 0 0x1e00000>;
 			no-map;
@@ -153,6 +159,16 @@
 		charge-full-design-microamp-hours = <3200000>;
 		voltage-min-design-microvolt = <3700000>;
 		voltage-max-design-microvolt = <4400000>;
+	};
+
+	disp_vddio_vreg: disp_vddio_vreg {
+		compatible = "regulator-fixed";
+		regulator-name = "disp_vddio_vreg";
+		startup-delay-us = <4000>;
+		regulator-always-on;
+		regulator-boot-on;
+		enable-active-high;
+		gpio = <&tlmm 79 0>;
 	};
 
 	/*
@@ -479,8 +495,28 @@
 	};
 };
 
+&i2c5 {
+	#dma-cells = <3>;
+	status = "okay";
+
+	dmas =  <&gpi_dma0 0 5 QCOM_GPI_I2C>,
+			<&gpi_dma0 1 5 QCOM_GPI_I2C>;
+	dma-names = "tx", "rx";
+	tas2557_codec: tas2557@4c{
+		#sound-dai-cells = <1>;
+		compatible = "ti,tas2557";
+		reg = <0x4c>;
+		ti,cdc-reset-gpio = <&tlmm 69 0>;
+		ti,irq-gpio = <&tlmm 30 0>;
+		ti,i2s-bits = <16>;
+		ti,bypass-tmax = <0>;
+	};
+};
+
 &i2c14 {
-	status="okay";
+	#dma-cells = <3>;
+	status = "okay";
+	clock-frequency = <400000>;
 
 	dmas =  <&gpi_dma1 0 6 QCOM_GPI_I2C>,
 			<&gpi_dma1 1 6 QCOM_GPI_I2C>;
@@ -495,28 +531,29 @@
 		pinctrl-0 = <&ts_int_default &ts_reset_default>;
 		pinctrl-1 = <&ts_int_sleep &ts_reset_sleep>;
 
-		vdd-supply = <&vreg_l14a_1p8>;
+		vdd-supply = <&disp_vddio_vreg>;
 		avdd-supply = <&vreg_l28a_3p0>;
 
-		fts,pwr-reg-name = "avdd";
-		fts,bus-reg-name = "vdd";
-		fts,irq-gpio = <&tlmm 31 0x2008>;
-		fts,irq-gpio-name = "fts_irq";
-		fts,reset-gpio-enable;
-		fts,reset-gpio = <&tlmm 32 0x00>;
-		fts,x-max = <1079>;
-		fts,y-max = <2339>;
-		fts,reset-gpio-name = "fts_rst";
-		fts,irq-flags = <0x2008>;
-		fts,key-num = <2>;
-		fts,key-codes = <158 139>;
-		fts,config-array-size = <1>;
-		fts,default-fw-name = "st_fts_e5.ftb";
+		st,pwr-reg-name = "avdd";
+		st,bus-reg-name = "vdd";
+		st,regulator_dvdd = "vdd";
+		st,regulator_avdd = "avdd";
+		st,irq-gpio = <&tlmm 31 0x2008>;
+		st,irq-gpio-name = "fts_irq";
+		st,reset-gpio-enable;
+		st,reset-gpio = <&tlmm 32 0x00>;
+		st,max-coords = <1079 2339>;
+		st,reset-gpio-name = "fts_rst";
+		st,irq-flags = <0x2008>;
+		st,key-num = <2>;
+		st,key-codes = <158 139>;
+		st,config-array-size = <1>;
+		st,default-fw-name = "st_fts_e5.ftb";
 
-		fts,cfg_0 {
-			fts,tp-vendor = <0x52>;
-			fts,fw-name = "st_fts_e5.ftb";
-			fts,limit-name = "stm_fts_production_limits.csv";
+		st,cfg_0 {
+			st,tp-vendor = <0x52>;
+			st,fw-name = "st_fts_e5.ftb";
+			st,limit-name = "stm_fts_production_limits.csv";
 		};
 	};
 };
@@ -553,8 +590,8 @@
 		vddneg-supply = <&ibb>;
 
 		pinctrl-names = "default", "sleep";
-		pinctrl-0 = <&ts_int_default &ts_reset_default>;
-		pinctrl-1 = <&ts_int_sleep &ts_reset_sleep>;
+		pinctrl-0 = <&sde_dsi_default &sde_te_default>;
+		pinctrl-1 = <&sde_dsi_sleep &sde_te_sleep>;
 
 		port {
 			panel_in: endpoint {
@@ -796,6 +833,84 @@
 	vdda-pll-supply = <&vreg_l1a_0p875>;
 };
 
+&sound {
+	compatible = "qcom,db845c-sndcard";
+	pinctrl-0 = <&quat_mi2s_active &quat_mi2s_sd0_active>;
+	pinctrl-names = "default";
+	model = "Xiaomi MIX 3";
+	audio-routing =
+		"RX_BIAS", "MCLK",
+		"AMIC1", "MIC BIAS1",
+		"AMIC2", "MIC BIAS2",
+		"AMIC3", "MIC BIAS3";
+
+	mm1-dai-link {
+		link-name = "MultiMedia1";
+		cpu {
+			sound-dai = <&q6asmdai MSM_FRONTEND_DAI_MULTIMEDIA1>;
+		};
+	};
+
+	mm2-dai-link {
+		link-name = "MultiMedia2";
+		cpu {
+			sound-dai = <&q6asmdai MSM_FRONTEND_DAI_MULTIMEDIA2>;
+		};
+	};
+
+	mm3-dai-link {
+		link-name = "MultiMedia3";
+		cpu {
+			sound-dai = <&q6asmdai MSM_FRONTEND_DAI_MULTIMEDIA3>;
+		};
+	};
+
+	tas2557-dai-link {
+		link-name = "Primary Spkr Playback";
+		cpu {
+			sound-dai = <&q6afedai QUATERNARY_MI2S_RX>;
+		};
+
+		platform {
+			sound-dai = <&q6routing>;
+		};
+
+		codec {
+			sound-dai = <&tas2557_codec 0>;
+		};
+	};
+
+	slim-dai-link {
+		link-name = "SLIM Playback";
+		cpu {
+			sound-dai = <&q6afedai SLIMBUS_0_RX>;
+		};
+
+		platform {
+			sound-dai = <&q6routing>;
+		};
+
+		codec {
+			sound-dai = <&wcd9340 0>;
+		};
+	};
+
+	slimcap-dai-link {
+		link-name = "SLIM Capture";
+		cpu {
+			sound-dai = <&q6afedai SLIMBUS_0_TX>;
+		};
+
+		platform {
+			sound-dai = <&q6routing>;
+		};
+
+		codec {
+			sound-dai = <&wcd9340 1>;
+		};
+	};
+};
+
 &tlmm {
 	gpio-reserved-ranges = <0 4>, <81 4>;
 
@@ -804,13 +919,7 @@
 		function = "gpio";
 		drive-strength = <16>;
 		bias-pull-down;
-	};
-
-	ts_reset_default: ts-reset-default-state {
-		pins = "gpio32";
-		function = "gpio";
-		drive-strength = <16>;
-		output-high;
+		input-enable;
 	};
 
 	ts_int_sleep: ts-int-sleep-state {
@@ -818,6 +927,14 @@
 		function = "gpio";
 		drive-strength = <2>;
 		bias-pull-down;
+		input-enable;
+	};
+
+	ts_reset_default: ts-reset-default-state {
+		pins = "gpio32";
+		function = "gpio";
+		drive-strength = <16>;
+		output-high;
 	};
 
 	ts_reset_sleep: ts-reset-sleep-state {
@@ -828,28 +945,28 @@
 		output-low;
 	};
 
-	sde_dsi_active: sde-dsi-active-state {
+	sde_dsi_default: sde-dsi-default-state {
 		pins = "gpio6", "gpio52";
 		function = "gpio";
 		drive-strength = <8>;
 		bias-disable;
 	};
 
-	sde_dsi_suspend: sde-dsi-suspend-state {
+	sde_dsi_sleep: sde-dsi-sleep-state {
 		pins = "gpio6", "gpio52";
 		function = "gpio";
 		drive-strength = <2>;
 		bias-pull-down;
 	};
 
-	sde_te_active: sde_te_active {
+	sde_te_default: sde_te_default-state {
 		pins = "gpio10";
 		function = "mdp_vsync";
 		drive-strength = <2>;
 		bias-pull-down;
 	};
 
-	sde_te_suspend: sde_te_suspend {
+	sde_te_sleep: sde_te_sleep-state {
 		pins = "gpio10";
 		function = "mdp_vsync";
 		drive-strength = <2>;
