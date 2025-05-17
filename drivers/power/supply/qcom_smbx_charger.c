@@ -119,7 +119,6 @@
 
 #define POWER_PATH_STATUS				0x60B
 #define P_PATH_USE_USBIN_BIT				BIT(4)
-#define P_PATH_VALID_INPUT_POWER_SOURCE_STS_BIT		BIT(0)
 
 #define BARK_BITE_WDOG_PET				0x643
 #define BARK_BITE_WDOG_PET_BIT				BIT(0)
@@ -219,8 +218,7 @@ static int smb_get_prop_usb_online(struct smb_chip *chip, int *val)
 		return rc;
 	}
 
-	*val = (stat & P_PATH_USE_USBIN_BIT) &&
-	       (stat & P_PATH_VALID_INPUT_POWER_SOURCE_STS_BIT);
+	*val = !!(stat & P_PATH_USE_USBIN_BIT);
 	return 0;
 }
 
