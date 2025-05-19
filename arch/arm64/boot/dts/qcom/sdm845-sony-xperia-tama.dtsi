@@ -18,6 +18,10 @@
 /delete-node/ &rmtfs_mem;
 
 / {
+	model = "Sony Xperia XZ3";
+	compatible = "sony,akatsuki", "qcom,sdm845";
+	chassis-type = "handset";
+
 	qcom,msm-id = <321 0x20001>; /* SDM845 v2.1 */
 	qcom,board-id = <8 0>;
 
