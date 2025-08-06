@@ -705,12 +705,6 @@
 	};
 };
 
-&pmi8998_haptics {
-	status = "okay";
-
-	qcom,wave-play-rate-us = <8621>;
-};
-
 &pmi8998_wled {
 	default-brightness = <800>;
 	qcom,switching-freq = <800>;
@@ -721,12 +715,6 @@
 	status = "okay";
 };
 
-&pmi8998_fg {
-	status = "okay";
-
-	power-supplies = <&pmi8998_charger>;
-	monitored-battery = <&battery>;
-};
 
 &pmi8998_charger {
 	status = "okay";
